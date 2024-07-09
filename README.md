@@ -1,2 +1,3 @@
-# Weather_forecast_case_stuty
- Comparison between forecasts for diferent days
+# Weather_forecast_case_study
+ Comparison between precipitation forecasts for different days for Cologne/ Bonn region in May 2024
+ 
