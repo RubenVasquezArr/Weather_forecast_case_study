@@ -129,7 +129,7 @@ class df:
 
 class plots:
     '''This class includes all function to create plots of the forecast data.'''
-    def extract_region(dataset, lat_min, lat_max, lon_min, lon_max):
+    def extract_region(self, dataset, lat_min, lat_max, lon_min, lon_max):
         """
         Extracts data from an xarray Dataset for a specific geographic region.
 
@@ -157,24 +157,36 @@ class plots:
         
         return subset
     
-    def read_data(dataset):
+    def read_data(self, dataset):
         '''Read in dataset and return the values of variables total precipitation, lon, lat, time and number (optional)'''
 
         tp = dataset.tp
-        lon = dataset.lon
-        lat = dataset.lat
+
+        # Support both lon/lat and longitude/latitude
+        if 'longitude' in dataset.dims and 'latitude' in dataset.dims:
+            lon = dataset.longitude
+            lat = dataset.latitude
+        elif 'lon' in dataset.dims and 'lat' in dataset.dims:
+            lon = dataset.lon
+            lat = dataset.lat
+        else:
+            raise ValueError("Latitude or longitude dimensions not found in the dataset.")
+        
         time = dataset.time
+
         if any(v is None for v in [tp, lon, lat, time]):
             raise ValueError("Dataset is missing required fields")
+        
         if hasattr(dataset, 'number'):
             number = dataset.number.values
             return tp, lon, lat, time, number
         else:
             return tp, lon, lat, time
+
         
-    def plot_map_tp(dataset, date):
-        '''Plot the precipitation for the whole area. Choose one date and all timesteps available from this day will be plotted.'''
-        tp, lon, lat, time = read_data(dataset)
+    def plot_map_tp(self, dataset, date, addtitle=None):
+        '''Plot the precipitation for the whole area. Choose one date and all timesteps available from this day will be plotted. If needed, add a comment on the title of the figure with the string addtitle.'''
+        tp, lon, lat, time = self.read_data(dataset)
         bounds = np.linspace(0, 100, 51)
         
         # Convert time to pandas datetime
@@ -215,7 +227,10 @@ class plots:
         cbar.set_label('[kg/m²]', fontsize=12)
         # Add overall title
         date_first_day = pd.to_datetime(time[0]).strftime("%d/%m/%Y")
-        fig.suptitle(f"Forecast of {date_first_day}", fontsize=16)
+        suptitle = f"Forecast of {date_first_day}"
+        if addtitle:
+            suptitle += f" - {addtitle}"
+        fig.suptitle(suptitle, fontsize=16)
         
         plt.tight_layout()
         plt.show()
