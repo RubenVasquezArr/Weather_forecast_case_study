@@ -163,14 +163,24 @@ class plots:
         tp = dataset.tp
 
         # Support both lon/lat and longitude/latitude
-        if 'longitude' in dataset.dims and 'latitude' in dataset.dims:
+        if 'longitude' in dataset:
             lon = dataset.longitude
-            lat = dataset.latitude
-        elif 'lon' in dataset.dims and 'lat' in dataset.dims:
+        elif 'lon' in dataset:
             lon = dataset.lon
+        else:
+            raise ValueError("Longitude dimension not found in the dataset.")
+        
+        if 'latitude' in dataset:
+            lat = dataset.latitude
+        elif 'lat' in dataset:
             lat = dataset.lat
         else:
-            raise ValueError("Latitude or longitude dimensions not found in the dataset.")
+            raise ValueError("Latitude dimension not found in the dataset.")
+        
+        if 'time' in dataset:
+            time = dataset.time
+        else:
+            raise ValueError("Time dimension not found in the dataset.")
         
         time = dataset.time
 
@@ -184,10 +194,13 @@ class plots:
             return tp, lon, lat, time
 
         
-    def plot_map_tp(self, dataset, date, addtitle=None):
+    def plot_map_tp(self, dataset, date, cbar_range=None, addtitle=None):
         '''Plot the precipitation for the whole area. Choose one date and all timesteps available from this day will be plotted. If needed, add a comment on the title of the figure with the string addtitle.'''
         tp, lon, lat, time = self.read_data(dataset)
-        bounds = np.linspace(0, 100, 51)
+        if cbar_range is not None:
+            bounds =  np.linspace(0, cbar_range, 21)
+        else:
+            bounds = np.linspace(0, 100, 51)
         
         # Convert time to pandas datetime
         time = pd.to_datetime(time, errors='coerce')  # Coerce invalid dates to NaT
