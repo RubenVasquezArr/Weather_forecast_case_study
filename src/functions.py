@@ -21,8 +21,35 @@ class df:
     '''
 
     def download_ecmwf_pf(date):
-        '''Download the enfo total precipitation forecast data (perturbed forecast) from ECMWF via ECMWFAPI client for a specific date and the next 144 forecast timesteps.
-        The input value date should be a string in the format 'YYYY-MM-DD'.'''
+        """
+        Download the ECMWF perturbed forecast total precipitation data for a specific date and the next 144 forecast steps.
+
+        This function retrieves the ensemble perturbed forecast data from the ECMWF for the specified date,
+        downloading the total precipitation data at 6-hour intervals for the next 144 forecast hours.
+        The input value `date` should be a string in the format 'YYYY-MM-DD'. The retrieved data is saved
+        to a NetCDF file named 'enfo_pf_YYYY_MM_DD.nc'.
+
+        Parameters:
+        -----------
+        date : str
+            The date for which to download the perturbed forecast data, in the format 'YYYY-MM-DD'.
+
+        Raises:
+        -------
+        ValueError:
+            If the date is not in the correct format 'YYYY-MM-DD'.
+        RuntimeError:
+            If the download fails due to an API exception or any other error.
+
+        Example:
+        --------
+        download_ecmwf_pf('2024-05-18')
+
+        Notes:
+        ------
+        The function uses the ECMWF API to retrieve the data. Ensure that the ECMWF API client is properly
+        configured and authenticated before calling this function.
+        """
         
         # check if date has the correct format
         if not re.match(r'\d{4}-\d{2}-\d{2}', date):
@@ -56,8 +83,35 @@ class df:
             raise RuntimeError(f"Download failed for {date}. Error: {e}")
     
     def download_ecmwf_cf(date):
-        '''download enfo total precipitation data from ecmwf the control forecast for a specific date and the next 144 forecast steps.
-        The input value date should be a string in the format 'YYYY-MM-DD'. '''
+        """
+        Download the ECMWF control forecast total precipitation data for a specific date and the next 144 forecast steps.
+
+        This function retrieves the ensemble control forecast data from the ECMWF for the specified date,
+        downloading the total precipitation data at 6-hour intervals for the next 144 forecast hours.
+        The input value `date` should be a string in the format 'YYYY-MM-DD'. The retrieved data is saved
+        to a NetCDF file named 'enfo_cf_YYYY_MM_DD.nc'.
+
+        Parameters:
+        -----------
+        date : str
+            The date for which to download the control forecast data, in the format 'YYYY-MM-DD'.
+
+        Raises:
+        -------
+        ValueError:
+            If the date is not in the correct format 'YYYY-MM-DD'.
+        RuntimeError:
+            If the download fails due to an API exception or any other error.
+
+        Example:
+        --------
+        download_ecmwf_cf('2024-05-18')
+
+        Notes:
+        ------
+        The function uses the ECMWF API to retrieve the data. Ensure that the ECMWF API client is properly
+        configured and authenticated before calling this function.
+        """
 
         if not re.match(r'\d{4}-\d{2}-\d{2}', date):
             raise ValueError("Date has to be in the format: 'YYYY-MM-DD'.")
@@ -158,7 +212,37 @@ class plots:
         return subset
     
     def read_data(self, dataset):
-        '''Read in dataset and return the values of variables total precipitation, lon, lat, time and number (optional)'''
+        """
+        Read in the dataset and return the values of variables total precipitation, longitude, latitude, and time.
+        Optionally, return the 'number' variable if it exists in the dataset.
+
+        Parameters:
+        -----------
+        dataset : xarray.Dataset
+            The dataset containing the required variables: total precipitation (tp), longitude (lon or longitude),
+            latitude (lat or latitude), and time. Optionally, it may contain 'number'.
+
+        Returns:
+        --------
+        tuple
+            A tuple containing the following variables:
+            - tp (xarray.DataArray): Total precipitation data.
+            - lon (xarray.DataArray): Longitude values.
+            - lat (xarray.DataArray): Latitude values.
+            - time (xarray.DataArray): Time values.
+            - number (numpy.ndarray, optional): Ensemble member numbers if present in the dataset.
+
+        Raises:
+        -------
+        ValueError:
+            If any of the required variables (tp, lon, lat, time) are not found in the dataset.
+            If the dataset is missing required fields.
+
+        Notes:
+        ------
+        The function supports datasets with either 'lon'/'lat' or 'longitude'/'latitude' naming conventions
+        for the spatial dimensions. It ensures that all required variables are present before returning their values.
+        """
 
         tp = dataset.tp
 
@@ -195,7 +279,39 @@ class plots:
 
         
     def plot_map_tp(self, dataset, date, cbar_range=None, addtitle=None):
-        '''Plot the precipitation for the whole area. Choose one date and all timesteps available from this day will be plotted. If needed, add a comment on the title of the figure with the string addtitle.'''
+        """Plot the precipitation for the whole area on a specified date.
+
+        This function plots the precipitation data for a given date, displaying all available timesteps 
+        (00, 06, 12, 18 hours) from that day. The precipitation data is visualized on a map using contour plots. 
+        Optionally, a colorbar range can be specified, and a custom title can be added to the figure.
+
+        Parameters:
+        -----------
+        dataset : xarray.Dataset
+            The dataset containing the precipitation data, along with longitude, latitude, and time.
+        date : str
+            The date for which the precipitation should be plotted, in the format 'YYYY-MM-DD'.
+        cbar_range : float, optional
+            The upper bound for the colorbar range. If not specified, the default range of 0 to 100 is used.
+        addtitle : str, optional
+            An additional string to be appended to the figure title.
+
+        Raises:
+        -------
+        ValueError:
+            If the date format is invalid or the specified date is out of range.
+
+        Example:
+        --------
+        plot_map_tp(dataset, '2024-05-18', cbar_range=50, addtitle='Heavy Rainfall Event')
+
+        Notes:
+        ------
+        The function reads the necessary data from the dataset, checks for valid date formats, 
+        and creates subplots for the specified times. The resulting figure includes coastlines, 
+        borders, and rivers for better geographical context. A horizontal colorbar is added below 
+        all subplots to indicate precipitation levels in kg/m². The final figure is saved as a PNG file.
+        """
         tp, lon, lat, time = self.read_data(dataset)
         if cbar_range is not None:
             bounds =  np.linspace(0, cbar_range, 21)
