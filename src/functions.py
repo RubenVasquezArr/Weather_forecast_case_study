@@ -9,6 +9,14 @@ import cartopy.crs as crs
 import cartopy.feature as cfeature
 from shapely import geometry
 import pandas as pd
+import folium
+from folium import plugins
+from folium.raster_layers import ImageOverlay
+import rasterio
+from rasterio.plot import reshape_as_image
+from matplotlib.colors import Normalize, PowerNorm, LinearSegmentedColormap
+import scipy 
+import matplotlib.dates as mdates
 
 server = ECMWFDataServer()
 
@@ -439,10 +447,90 @@ class plots:
         plt.show()
 
     def extract_forecasts_info(data, lat, lon):
+        """
+        Extracts forecast information for a specific geographic location.
+
+        This function interpolates the provided dataset to extract the ensemble, mean, and standard deviation of
+        precipitation forecasts for a specified latitude and longitude.
+
+        Parameters:
+        -----------
+        data : xarray.Dataset
+            The dataset containing the forecast data with dimensions of time, latitude, and longitude.
+        lat : float
+            The latitude of the location for which to extract forecast information.
+        lon : float
+            The longitude of the location for which to extract forecast information.
+
+        Returns:
+        --------
+        tuple
+            A tuple containing three elements:
+            - ensemble (xarray.DataArray): The interpolated ensemble precipitation data at the specified location.
+            - mean_precipitation (xarray.DataArray): The mean precipitation forecast at the specified location.
+            - std_precipitation (xarray.DataArray): The standard deviation of the precipitation forecast at the specified location.
+        """
         ensemble = data.interp(longitude=lon, latitude=lat)
         mean_precipitation = ensemble.mean(dim='number')
         std_precipitation = ensemble.std(dim='number')
         return ensemble, mean_precipitation,std_precipitation
     
+    def create_colormap():
+        """
+        Creates a custom colormap with transparency for zero values.
 
-        
+        This function defines a colormap with transparency for zero values and a red color for maximum values. The colormap
+        is discretized into a specified number of bins.
+
+        Returns:
+        --------
+        LinearSegmentedColormap
+            A LinearSegmentedColormap object that can be used for visualizing data with transparency for zero values.
+        """
+        # Define a colormap with transparency for zero values
+        colors = [(1, 1, 1, 0.7), (1, 0, 0, 0.7)]  # Transparent for 0, red for max
+        n_bins = 10  # Discretizes the interpolation into bins
+        cmap_name = 'red_rain'
+        cm = LinearSegmentedColormap.from_list(cmap_name, colors, N=n_bins)
+        return cm
+    
+    def add_raster_to_map(map_obj, raster_path, layer_name, colormap):
+        """
+        Adds a raster layer to a Folium map with the specified colormap.
+
+        This function reads a raster file, normalizes its values, applies a colormap, and adds the resulting image overlay
+        to the provided Folium map object.
+
+        Parameters:
+        -----------
+        map_obj : folium.Map
+            The Folium map object to which the raster layer will be added.
+        raster_path : str
+            The path to the raster file to be added to the map.
+        layer_name : str
+            The name of the layer to be added to the map.
+        colormap : LinearSegmentedColormap
+            The colormap to be applied to the raster data.
+
+        Returns:
+        --------
+        None
+        """
+        with rasterio.open(raster_path) as src:
+            bounds = [[src.bounds.bottom, src.bounds.left], [src.bounds.top, src.bounds.right]]
+            image = src.read(1)  # Read the first band
+
+            # Normalize image
+            #norm = Normalize(vmin=image.min(), vmax=image.max())
+            norm = PowerNorm(gamma=0.5, vmin=image.min(), vmax=300)  # gamma < 1 for exponential scaling
+
+            image_normalized = norm(image)
+
+            # Apply colormap
+            image_colored = colormap(image_normalized)
+
+            # Convert to uint8
+            image_colored = (image_colored * 255).astype(np.uint8)
+
+            img_overlay = ImageOverlay(image=image_colored, bounds=bounds, name=layer_name, overlay=True, control=True)
+            img_overlay.add_to(map_obj)

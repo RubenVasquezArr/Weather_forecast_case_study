@@ -1,7 +1,7 @@
 import sys
 import os
 import unittest
-from matplotlib.testing.decorators import cleanup
+#from matplotlib.testing.decorators import cleanup
 from unittest.mock import patch
 
 import numpy as np
@@ -13,6 +13,15 @@ from shapely import geometry
 import pandas as pd
 from ecmwfapi import ECMWFDataServer
 import ecmwfapi
+
+#
+
+import matplotlib.dates as mdates
+from matplotlib.colors import LinearSegmentedColormap, PowerNorm
+import rasterio
+from folium import Map
+from folium.raster_layers import ImageOverlay
+
 
 # Add path to scr functions.py
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'src')))
@@ -303,7 +312,7 @@ class TestPlotMapTP(unittest.TestCase):
         self.lat = np.linspace(-90, 90, 10)
         self.time = pd.date_range("2023-01-01", periods=4, freq='6H')  # Example times
 
-    @cleanup
+    #@cleanup
     def test_plot_map_tp_default(self):
         dataset = xr.Dataset(
             {
@@ -317,7 +326,7 @@ class TestPlotMapTP(unittest.TestCase):
         self.reader.plot_map_tp(dataset, '2023-01-01')
         plt.close()
 
-    @cleanup
+    #@cleanup
     def test_plot_map_tp_with_cbar_range(self):
         dataset = xr.Dataset(
             {
@@ -331,7 +340,7 @@ class TestPlotMapTP(unittest.TestCase):
         self.reader.plot_map_tp(dataset, '2023-01-01', cbar_range=50)
         plt.close()
 
-    @cleanup
+    #@cleanup
     def test_plot_map_tp_with_addtitle(self):
         dataset = xr.Dataset(
             {
@@ -344,6 +353,80 @@ class TestPlotMapTP(unittest.TestCase):
         
         self.reader.plot_map_tp(dataset, '2023-01-01', addtitle='Mean')
         plt.close()
+#############################
+
+class TestPlotPrecipitationForecasts(unittest.TestCase):
+    def test_plot_creation(self):
+        # Create mock data
+        time = pd.date_range("2024-05-01", periods=30)
+        number = np.arange(10)
+        ensemble_data = np.random.rand(30, 10)
+        mean_data = ensemble_data.mean(axis=1)
+        std_data = ensemble_data.std(axis=1)
+
+        ensemble = xr.Dataset({
+            'tp': (('time', 'number'), ensemble_data)
+        }, coords={'time': time, 'number': number})
+
+        mean_precipitation = xr.Dataset({
+            'tp': ('time', mean_data)
+        }, coords={'time': time})
+
+        std_precipitation = xr.Dataset({
+            'tp': ('time', std_data)
+        }, coords={'time': time})
+
+        # Run the function (visual check)
+        plots.plot_precipitation_forecasts(ensemble, mean_precipitation, std_precipitation)
+
+        # Additional checks can be added to verify elements of the plot if needed
+
+class TestExtractForecastsInfo(unittest.TestCase):
+    def test_extract_info(self):
+        # Create mock data
+        time = pd.date_range("2024-05-01", periods=30)
+        lat = [0, 1]
+        lon = [0, 1]
+        number = np.arange(10)
+        data = np.random.rand(30, 2, 2, 10)
+
+        dataset = xr.Dataset({
+            'tp': (('time', 'latitude', 'longitude', 'number'), data)
+        }, coords={'time': time, 'latitude': lat, 'longitude': lon, 'number': number})
+
+        # Extract forecasts info
+        ensemble, mean_precipitation, std_precipitation = plots.extract_forecasts_info(dataset, 0.5, 0.5)
+
+        # Assertions to verify the correctness of the extraction
+        self.assertIsInstance(ensemble, xr.DataArray)
+        self.assertIsInstance(mean_precipitation, xr.DataArray)
+        self.assertIsInstance(std_precipitation, xr.DataArray)
+        self.assertEqual(ensemble.shape, (30, 10))
+        self.assertEqual(mean_precipitation.shape, (30,))
+        self.assertEqual(std_precipitation.shape, (30,))
+
+class TestCreateColormap(unittest.TestCase):
+    def test_colormap_creation(self):
+        cmap = plots.create_colormap()
+        self.assertIsInstance(cmap, LinearSegmentedColormap)
+        self.assertEqual(cmap.N, 10)  # Ensure it has the right number of bins
+
+class TestAddRasterToMap(unittest.TestCase):
+    def test_add_raster(self):
+        # Create a temporary raster file
+        with rasterio.open('/tmp/test_raster.tif', 'w', driver='GTiff', height=10, width=10, count=1, dtype='uint8', crs='+proj=latlong', transform=rasterio.transform.from_origin(-123.0, 45.0, 0.1, 0.1)) as dst:
+            data = np.random.randint(0, 300, size=(10, 10)).astype('uint8')
+            dst.write(data, 1)
+
+        # Create a map
+        map_obj = Map(location=[45.0, -123.0], zoom_start=5)
+        cmap = plots.create_colormap()
+
+        # Add raster to map
+        plots.add_raster_to_map(map_obj, '/tmp/test_raster.tif', "Test Layer", cmap)
+
+        # Additional checks to verify the map contains the raster layer can be added
+
 
 # running Unittests 
 if __name__ == '__main__':
