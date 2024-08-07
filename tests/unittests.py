@@ -1,7 +1,6 @@
 import sys
 import os
 import unittest
-#from matplotlib.testing.decorators import cleanup
 from unittest.mock import patch
 
 import numpy as np

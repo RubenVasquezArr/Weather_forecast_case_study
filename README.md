@@ -3,6 +3,8 @@
 
 Part of the project will be the access and downloading of the forecast data, processing and visualizing these data. The following sections describe the structure of the repository and included files and needed modules, instructions how to access the data, description of the data processing part and final conclusions.
 
+Autors: Luisa Reske, Rubén Vásquez Arredondo
+
 ## Table of Contents
 1. [Weather Forecast Case Study Documentation](#weather-forecast-case-study-documentation)
 2. [Needed Python Modules](#needed-python-modules)
@@ -43,19 +45,21 @@ Please ensure the following programs and modules are correctly implemented to us
 
 The Directory has the following structure:
 
+```bash
 Repository/
 ├── data/
-│ ├── control/ # Control files from ECMWF
-│ ├── era5/ # Files from ERA5
-│ ├── perturbed/ # Perturbed forecasts files from ECMWF
-│ └── raster/ # Processed data
+│ ├── control/     # Control files from ECMWF
+│ ├── era5/        # Files from ERA5
+│ ├── perturbed/   # Perturbed forecasts files from ECMWF
+│ └── raster/      # Processed data
 ├── src/
-│ ├── notebooks/ # Notebooks files
+│ ├── notebooks/   # Notebooks files
 │ └── functions.py # Python functions
 ├── tests/
 │ └── unittests.py # Unit tests
 ├── LICENSE
 └── README.md
+```
 
 To replicate this project, follow these steps in the presented order:
 
@@ -101,6 +105,9 @@ The ensemble mean spatial distribution follows the same pattern, although the am
 
 Uncertainty regarding the total precipitation amount increases the further the event is in the future. The forecast can be so erroneous that no rain occurs at all. The forecast is much more reliable in predicting the absence of precipitation in areas where none is forecasted and less reliable for regions where precipitation is possible given the current weather development.
 
+An interactive map of the world forecast for the 18 of may of 2024 can be acceded [here](https://htmlview.glitch.me/?https://github.com/RubenVasquezArr/Weather_forecast_case_study/blob/main/interactive_map_red.html)/. At the upper right of the map there is a filter to select only de desired layer. Each layer is the forecast of each day for the 18 of may, and finally the last layer is the era5 reanalysis data. 
+
 ## Conclusions
 
 In conclusion, this case study demonstrates the challenges and variability in short- and medium-term weather forecasting, particularly for heavy rainfall events. The analysis shows that while ensemble forecasting can provide valuable insights into potential weather scenarios and uncertainties, it is crucial to continuously update and refine predictions as the event approaches. The integration of multiple data sources, such as ECMWF and ERA5, enhances the robustness of the analysis. Future work could focus on improving the conversion and integration processes, as well as exploring other forecasts from different sources.
+ 
