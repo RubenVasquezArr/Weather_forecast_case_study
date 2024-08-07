@@ -9,6 +9,8 @@ import cartopy.crs as crs
 import cartopy.feature as cfeature
 from shapely import geometry
 import pandas as pd
+import os
+import sys
 
 server = ECMWFDataServer()
 
@@ -180,6 +182,39 @@ class df:
             current_date += timedelta(days=1)
 
         return date_list
+
+    def get_source_files(extensions:list[str], cf_or_pf="pf") -> list[str]:
+        """
+        Retrieves a list of file paths from a specific directory, filtered by file extensions and a keyword.
+
+        Parameters:
+        -----------
+        extensions : list[str]
+            A list of file extensions to filter the files (e.g., ['.nc', '.txt']).
+        cf_or_pf : str, optional
+            A keyword to filter the files by, default is 'pf'.
+            'pf' stands for the perturbed forecast, 'cf' for control.
+
+        Returns:
+        --------
+        list[str]
+            A sorted list of file paths that match the specified extensions and contain the keyword.
+
+        Example:
+        --------
+        >>> get_source_files(['.csv'], 'pf')
+        ['/path/to/Weather_forecast_case_study/src/data/file1_pf.csv', '/path/to/Weather_forecast_case_study/src/data/file2_pf.csv']
+        """
+        filenames = []
+        base_path = os.getcwd()
+        source_dir = 'Weather_forecast_case_study/src/data'
+        all_files = os.listdir(source_dir)
+        for file in all_files:
+            for extension in extensions:
+                if file.endswith(extension) and file.find(cf_or_pf) != -1:
+                    filenames.append(os.path.join(source_dir, file))
+        filenames = sorted(filenames)
+        return filenames
 
 class plots:
     '''This class includes all function to create plots of the forecast data.'''
