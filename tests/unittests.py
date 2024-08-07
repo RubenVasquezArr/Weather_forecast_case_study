@@ -13,6 +13,7 @@ from shapely import geometry
 import pandas as pd
 from ecmwfapi import ECMWFDataServer
 import ecmwfapi
+import shutil
 
 #
 
@@ -124,6 +125,68 @@ class TestDownloadECMWFCF_cf(unittest.TestCase):
         self.assertIn(f"Download failed for {date}. Error: Some general error", str(context.exception))
 
         self.assertIn(f"Download failed for {date}. Error: Some general error", str(context.exception))
+
+# unittests for get_source_file
+class TestGetSourceFiles(unittest.TestCase):
+
+    @classmethod
+    def setUpClass(cls):
+        # Setup a test directory with some files
+        cls.test_dir = 'Weather_forecast_case_study/src/data'
+        os.makedirs(cls.test_dir, exist_ok=True)
+        
+        # Create some test files
+        cls.files_to_create = [
+            'file1_pf.csv', 'file2_pf.nc', 'file3_cf.csv',
+            'file4_pf.txt', 'file5_cf.txt', 'file6_pf.nc',
+            'file7_cf.nc', 'file8.csv'
+        ]
+        
+        for file_name in cls.files_to_create:
+            with open(os.path.join(cls.test_dir, file_name), 'w') as f:
+                f.write('test')
+
+    @classmethod
+    def tearDownClass(cls):
+        # Remove the test directory after tests
+        shutil.rmtree('Weather_forecast_case_study')
+
+    def test_get_source_files_pf_csv(self):
+        expected_files = [
+            os.path.join(self.test_dir, 'file1_pf.csv')
+        ]
+        result = df.get_source_files(['.csv'], 'pf')
+        self.assertEqual(result, expected_files)
+
+    def test_get_source_files_pf_nc(self):
+        expected_files = [
+            os.path.join(self.test_dir, 'file2_pf.nc'),
+            os.path.join(self.test_dir, 'file6_pf.nc')
+        ]
+        result = df.get_source_files(['.nc'], 'pf')
+        self.assertEqual(result, expected_files)
+
+    def test_get_source_files_cf_csv(self):
+        expected_files = [
+            os.path.join(self.test_dir, 'file3_cf.csv')
+        ]
+        result = df.get_source_files(['.csv'], 'cf')
+        self.assertEqual(result, expected_files)
+
+    def test_get_source_files_multiple_extensions(self):
+        expected_files = [
+            os.path.join(self.test_dir, 'file1_pf.csv'),
+            os.path.join(self.test_dir, 'file2_pf.nc'),
+            os.path.join(self.test_dir, 'file4_pf.txt'),
+            os.path.join(self.test_dir, 'file6_pf.nc')
+        ]
+        result = df.get_source_files(['.csv', '.nc', '.txt'], 'pf')
+        self.assertEqual(result, expected_files)
+
+    def test_get_source_files_no_match(self):
+        expected_files = []
+        result = df.get_source_files(['.pdf'], 'pf')
+        self.assertEqual(result, expected_files)
 
 # unit tests for function get_datelist
 class TestGetDateList(unittest.TestCase):

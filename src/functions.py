@@ -15,16 +15,18 @@ from folium.raster_layers import ImageOverlay
 import rasterio
 from rasterio.plot import reshape_as_image
 from matplotlib.colors import Normalize, PowerNorm, LinearSegmentedColormap
-import scipy 
+import scipy
 import matplotlib.dates as mdates
+import os
+import sys
 
 server = ECMWFDataServer()
 
 class df:
     '''This class includes all needed functions to download a list of files from the ecmwf forecast data of total precipitation.
-    The functions can easily adapted for other parameters like temperature, humidity, wind etc. Visit therefore the documentation of the parameters of enfo and 
+    The functions can easily adapted for other parameters like temperature, humidity, wind etc. Visit therefore the documentation of the parameters of enfo and
     change param in the following functions.
-    
+
     https://apps.ecmwf.int/datasets/data/s2s-realtime-instantaneous-accum-ecmf/levtype=sfc/type=pf
     '''
 
@@ -58,11 +60,11 @@ class df:
         The function uses the ECMWF API to retrieve the data. Ensure that the ECMWF API client is properly
         configured and authenticated before calling this function.
         """
-        
+
         # check if date has the correct format
         if not re.match(r'\d{4}-\d{2}-\d{2}', date):
             raise ValueError("Date has to be in the format: 'YYYY-MM-DD'.")
-            
+
         year, month, day = date.split('-')
         filename = f'enfo_pf_{year}_{month}_{day}.nc'
 
@@ -89,7 +91,7 @@ class df:
             raise RuntimeError(f"Download failed for {date}. APIException: {e}")
         except Exception as e:
             raise RuntimeError(f"Download failed for {date}. Error: {e}")
-    
+
     def download_ecmwf_cf(date):
         """
         Download the ECMWF control forecast total precipitation data for a specific date and the next 144 forecast steps.
@@ -123,7 +125,7 @@ class df:
 
         if not re.match(r'\d{4}-\d{2}-\d{2}', date):
             raise ValueError("Date has to be in the format: 'YYYY-MM-DD'.")
-            
+
         year, month, day = date.split('-')
         filename = f'enfo_cf_{year}_{month}_{day}.nc'
 
@@ -144,43 +146,43 @@ class df:
                 "target": filename
             })
             print(f"Successfully downloaded control forecast data from {date} to {filename}")
-        
+
         except ecmwfapi.api.APIException as e:
             raise RuntimeError(f"Download failed for {date}. APIException: {e}")
         except Exception as e:
             raise RuntimeError(f"Download failed for {date}. Error: {e}")
-    
+
     def get_datelist(startdate, enddate):
         '''Returns a list of dates between startdate and enddate, inclusive.
-        
+
         Input:
             startdate (str): Start date in the format 'YYYY-MM-DD'.
             enddate (str): End date in the format 'YYYY-MM-DD'.
-        
+
         Returns:
             list: List of dates in the format 'YYYY-MM-DD'.
-        
+
         Raises:
-            ValueError: If startdate or enddate is not a string, or if dates are not in the correct format, 
+            ValueError: If startdate or enddate is not a string, or if dates are not in the correct format,
                         or if enddate is before startdate.
         '''
-        
+
         # Validation of the input parameters
         if not isinstance(startdate, str) or not isinstance(enddate, str):
             raise ValueError("Both startdate and enddate must be strings.")
-        
+
         try:
             start_date = datetime.strptime(startdate, '%Y-%m-%d')
             end_date = datetime.strptime(enddate, '%Y-%m-%d')
         except ValueError:
             raise ValueError("Invalid date format. Please use 'YYYY-MM-DD'.")
-        
+
         if end_date < start_date:
             raise ValueError("End date cannot be before start date.")
-        
+
         # Empty list, which will be returned at the end of function
         date_list = []
-        
+
         # Loop from start_date to end_date
         current_date = start_date
         while current_date <= end_date:
@@ -188,6 +190,39 @@ class df:
             current_date += timedelta(days=1)
 
         return date_list
+
+    def get_source_files(extensions:list[str], cf_or_pf="pf") -> list[str]:
+        """
+        Retrieves a list of file paths from a specific directory, filtered by file extensions and a keyword.
+
+        Parameters:
+        -----------
+        extensions : list[str]
+            A list of file extensions to filter the files (e.g., ['.nc', '.txt']).
+        cf_or_pf : str, optional
+            A keyword to filter the files by, default is 'pf'.
+            'pf' stands for the perturbed forecast, 'cf' for control.
+
+        Returns:
+        --------
+        list[str]
+            A sorted list of file paths that match the specified extensions and contain the keyword.
+
+        Example:
+        --------
+        >>> get_source_files(['.csv'], 'pf')
+        ['/path/to/Weather_forecast_case_study/src/data/file1_pf.csv', '/path/to/Weather_forecast_case_study/src/data/file2_pf.csv']
+        """
+        filenames = []
+        base_path = os.getcwd()
+        source_dir = 'Weather_forecast_case_study/src/data'
+        all_files = os.listdir(source_dir)
+        for file in all_files:
+            for extension in extensions:
+                if file.endswith(extension) and file.find(cf_or_pf) != -1:
+                    filenames.append(os.path.join(source_dir, file))
+        filenames = sorted(filenames)
+        return filenames
 
 class plots:
     '''This class includes all function to create plots of the forecast data.'''
@@ -208,7 +243,7 @@ class plots:
         # Ensure lat_min <= lat_max and lon_min <= lon_max
         lat_min, lat_max = sorted([lat_min, lat_max])
         lon_min, lon_max = sorted([lon_min, lon_max])
-        
+
         # Select latitude and longitude slices based on available dimensions
         if 'latitude' in dataset.dims and 'longitude' in dataset.dims:
             subset = dataset.sel(latitude=(dataset.latitude >= lat_min) & (dataset.latitude <= lat_max), longitude=(dataset.longitude >= lon_min) & (dataset.longitude <= lon_max))
@@ -216,9 +251,9 @@ class plots:
             subset = dataset.sel(lat=(dataset.lat >= lat_min) & (dataset.lat <= lat_max), lon=(dataset.lon >= lon_min) & (dataset.lon <= lon_max))
         else:
             raise ValueError("Latitude or longitude dimensions not found in the dataset.")
-        
+
         return subset
-    
+
     def read_data(self, dataset):
         """
         Read in the dataset and return the values of variables total precipitation, longitude, latitude, and time.
@@ -261,36 +296,36 @@ class plots:
             lon = dataset.lon
         else:
             raise ValueError("Longitude dimension not found in the dataset.")
-        
+
         if 'latitude' in dataset:
             lat = dataset.latitude
         elif 'lat' in dataset:
             lat = dataset.lat
         else:
             raise ValueError("Latitude dimension not found in the dataset.")
-        
+
         if 'time' in dataset:
             time = dataset.time
         else:
             raise ValueError("Time dimension not found in the dataset.")
-        
+
         time = dataset.time
 
         if any(v is None for v in [tp, lon, lat, time]):
             raise ValueError("Dataset is missing required fields")
-        
+
         if hasattr(dataset, 'number'):
             number = dataset.number.values
             return tp, lon, lat, time, number
         else:
             return tp, lon, lat, time
 
-        
+
     def plot_map_tp(self, dataset, date, cbar_range=None, addtitle=None):
         """Plot the precipitation for the whole area on a specified date.
 
-        This function plots the precipitation data for a given date, displaying all available timesteps 
-        (00, 06, 12, 18 hours) from that day. The precipitation data is visualized on a map using contour plots. 
+        This function plots the precipitation data for a given date, displaying all available timesteps
+        (00, 06, 12, 18 hours) from that day. The precipitation data is visualized on a map using contour plots.
         Optionally, a colorbar range can be specified, and a custom title can be added to the figure.
 
         Parameters:
@@ -315,9 +350,9 @@ class plots:
 
         Notes:
         ------
-        The function reads the necessary data from the dataset, checks for valid date formats, 
-        and creates subplots for the specified times. The resulting figure includes coastlines, 
-        borders, and rivers for better geographical context. A horizontal colorbar is added below 
+        The function reads the necessary data from the dataset, checks for valid date formats,
+        and creates subplots for the specified times. The resulting figure includes coastlines,
+        borders, and rivers for better geographical context. A horizontal colorbar is added below
         all subplots to indicate precipitation levels in kg/m². The final figure is saved as a PNG file.
         """
         tp, lon, lat, time = self.read_data(dataset)
@@ -325,13 +360,13 @@ class plots:
             bounds =  np.linspace(0, cbar_range, 21)
         else:
             bounds = np.linspace(0, 100, 51)
-        
+
         # Convert time to pandas datetime
         time = pd.to_datetime(time, errors='coerce')  # Coerce invalid dates to NaT
-        
+
         if time.isnull().any():
             raise ValueError("Invalid date format or range")
-        
+
         # Define the times to plot for the specific date (00, 6, 12, 18 hours)
         times_to_plot = pd.to_datetime([
             f"{date}T00:00:00.000000000",
@@ -339,25 +374,25 @@ class plots:
             f"{date}T12:00:00.000000000",
             f"{date}T18:00:00.000000000"
         ])
-        
+
         # Create subplots
         fig, axs = plt.subplots(1, len(times_to_plot), figsize=(16, 6), subplot_kw={'projection': crs.Mercator()})
         contour_plots = []
         for i, t in enumerate(times_to_plot):
             if t in time:
                 index = np.where(time == t)[0][0]
-                
+
                 ax = axs[i]
                 ax.coastlines()
                 ax.add_feature(cfeature.BORDERS)
                 ax.add_feature(cfeature.RIVERS, color='darkslategrey')
-                
+
                 filled_vimd = ax.contourf(lon, lat, tp[index, :, :], levels=bounds, transform=crs.PlateCarree(), cmap='BuPu')
                 contour_plots.append(filled_vimd)
-                
+
                 title = t.strftime("%d/%m/%Y %H:%M")
                 ax.set_title(title)
-        
+
         # Add a single colorbar below all subplots
         cbar_ax = fig.add_axes([0.1, -0.1, 0.8, 0.05])  # [left, bottom, width, height]
         cbar = fig.colorbar(contour_plots[0], cax=cbar_ax, orientation='horizontal', format='%.1f')
@@ -368,13 +403,13 @@ class plots:
         if addtitle:
             suptitle += f" - {addtitle}"
         fig.suptitle(suptitle, fontsize=16)
-        
+
         plt.tight_layout()
         plt.show()
         saveas = pd.to_datetime(time[0]).strftime("%Y_%m_%d")
         plt.savefig(f'forecast_precipitation_map_{saveas}.png')
         plt.close()
-    
+
     def plot_precipitation_forecasts(ensemble, mean_precipitation, std_precipitation, xlim=None, ylim=None):
         """
         Generates a plot of precipitation forecasts, including ensemble forecasts, mean forecast, and standard deviation.
@@ -419,19 +454,19 @@ class plots:
             ensemble.tp.sel(number = ensemble.number.values[1:]),
             color='lightblue',
             alpha=0.5)
-        #here we plot the mean precipitation of the forecast ensemble 
+        #here we plot the mean precipitation of the forecast ensemble
         ax.plot(
             mean_precipitation.time,
             mean_precipitation.tp,
             color='blue',
             linewidth=2,
             label="Mean Forecast")
-        #here we plot the standar deviation of the  precipitation of the forecast ensemble 
+        #here we plot the standar deviation of the  precipitation of the forecast ensemble
         plt.fill_between(
-            mean_precipitation.time, 
-            mean_precipitation.tp-std_precipitation.tp, 
+            mean_precipitation.time,
+            mean_precipitation.tp-std_precipitation.tp,
             mean_precipitation.tp+std_precipitation.tp,
-            color='yellow', 
+            color='yellow',
             label="SD Forecast",
             linewidth= 1)
         #finally some details
@@ -474,7 +509,7 @@ class plots:
         mean_precipitation = ensemble.mean(dim='number')
         std_precipitation = ensemble.std(dim='number')
         return ensemble, mean_precipitation,std_precipitation
-    
+
     def create_colormap():
         """
         Creates a custom colormap with transparency for zero values.
@@ -493,7 +528,7 @@ class plots:
         cmap_name = 'red_rain'
         cm = LinearSegmentedColormap.from_list(cmap_name, colors, N=n_bins)
         return cm
-    
+
     def add_raster_to_map(map_obj, raster_path, layer_name, colormap):
         """
         Adds a raster layer to a Folium map with the specified colormap.
