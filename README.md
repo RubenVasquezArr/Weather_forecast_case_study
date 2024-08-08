@@ -6,21 +6,14 @@ Part of the project will be the access and downloading of the forecast data, pro
 Autors: Luisa Reske, Rubén Vásquez Arredondo
 
 ## Table of Contents
-1. [Weather Forecast Case Study Documentation](#weather-forecast-case-study-documentation)
-2. [Needed Python Modules](#needed-python-modules)
-3. [Structure of the Project](#structure-of-the-project)
-4. [Accessing the Forecast Data from ECMWF](#accessing-the-forecast-data-from-eCMWF)
-5. [Accessing ERA5 Data from Copernicus Climate Data Store](#accessing-era5-data-from-copernicus-climate-data-store)
-6. [Functions and Unittests](#functions-and-Unittests)
-7. [Data Analysis](#data-analysis)
-8. [Results and Insights](#results-and-insights)
-9. [Conclusions](#conclusions)
- 
-## Weather Forecast Case Study Documentation
-
-Accurately predicting precipitation events can be very challenging, particularly in terms of duration, amount, and location of the rainfall. The further into the future one looks, the less accurate the forecasts become. This project focuses on the short- and medium-term forecasting of a heavy rainfall event in Western Germany in May 2024. For this purpose, the historical forecast data from the European Centre for Medium-Range Weather Forecasts (ECMWF) for a period before the predicted event will be examined, as well as how these forecasts have evolved over time.
-
-Part of the project will be the access and downloading of the forecast data, processing and visualizing these data. The following sections describe the structure of the repository and include files and needed modules, instructions on how to access the data, description of the data processing part, and final conclusions.
+1. [Needed Python Modules](#needed-python-modules)
+2. [Structure of the Project](#structure-of-the-project)
+3. [Accessing the Forecast Data from ECMWF](#accessing-the-forecast-data-from-eCMWF)
+4. [Accessing ERA5 Data from Copernicus Climate Data Store](#accessing-era5-data-from-copernicus-climate-data-store)
+5. [Functions and Unittests](#functions-and-Unittests)
+6. [Data Analysis](#data-analysis)
+7. [Results and Insights](#results-and-insights)
+8. [Conclusions](#conclusions)
 
 ## Needed Python Modules
 
