@@ -66,6 +66,8 @@ The Jupyter notebook `ecmwf_download.ipynb` demonstrates the procedure for downl
 
 Perturbed forecast data is available directly in the NetCDF format and can be seamlessly utilized in subsequent analyses. However, control forecast data is provided in GRIB format and must be converted to NetCDF for equivalent data analysis as perturbed forecasts. The shell script `convert_grib_to_netcdf.sh` facilitates this conversion using CDO. Therefore, ensure that CDO is properly installed ([CDO Installation](https://code.mpimet.mpg.de/projects/cdo)). Alternatively, modify the `download_ecmwf_cf` function to set the `format` parameter to `netcdf`.
 
+Add all downloaded data to the `data` directory.
+
 ## Accessing ERA5 Data from Copernicus Climate Data Store
 
 To compare the forecasts with actual weather conditions, we use reanalysis data from ERA5, accessible via the Copernicus Climate Data Store ([ERA5 Complete Dataset](https://cds.climate.copernicus.eu/cdsapp#!/dataset/reanalysis-era5-complete?tab=form)).
