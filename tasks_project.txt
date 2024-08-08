@@ -1,0 +1,20 @@
+Who did what?
+
+Ruben:
+following notebooks in src directory:
+- ecmwf_forecasts_plots
+- raster processing
+- raster_interactive_map
+
+
+Luisa:
+- Downloading ECMWF and ERA5 data
+following notebooks in src directory:
+- download_era5
+- ecmwf_download
+- ecmwf_timeseries_map
+- era5_enfo_comparison
+
+We both worked on our main functions.py file, which contains all in the notebooks used functions.
+The person, who used the function in its notebook, wrote also this one and the unittests for this function in the test directory.
+We both worked on documentation of the readme.
