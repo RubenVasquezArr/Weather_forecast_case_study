@@ -92,7 +92,6 @@ The following notebooks perform data processing and analysis:
 - `ecmwf_timeseries_map.ipynb`: Plotting the Forecast Data (control, mean and standard deviation of Ensemble) for the whole Germany for the 18th of May.
 - `ecmwf_forecasts_maps.ipynb`: First approximation to map the evolution of the forecast, producing static maps of rain for Germany.
 - `ecmwf_forecasts_plots.ipynb`: Plots the ECMWF data of forecast for the 18th of May 2024, from different days to understand the evolution of the forecast up to this day, including mean forecast and standard deviation.
-- `ecmwf_multiple_day_extraction.ipynb`
 - `era5_enfo_comparison.ipynb`: Showing the difference between the mean of ensemble forecast and ERA5.
 - `raster_processing.ipynb`: To study the evolution of the forecast for the 18th of May 2024, we use ERA5 and ECMWF data to produce rasters, for future visual analysis.
 - `raster_interactive_map.ipynb`: To study the evolution of the forecast for the 18th of May 2024, we use previously produced rasters, and then mapped with leaflet and the folium library.
